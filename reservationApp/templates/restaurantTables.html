@@ -17,7 +17,7 @@
           {% for dt in data %}
               <a href="/tableDetails/{{ dt.id }}/" class="list-group-item list-group-item-action flex-column align-items-start">
                 <div class="d-flex w-100 justify-content-between">
-                  <h5 class="mb-1">Table Number {{ dt.id }}</h5>
+                  <h5 class="mb-1">Table Number: {{ dt.id }}</h5>
                 </div>
                 <p class="mb-1">Maximum Number Of Seats {{ dt.maxNumberOfSeats }}</p>
                 <small>Restaurant Name: {{ restaurantData.name }}</small>

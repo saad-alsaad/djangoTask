@@ -13,9 +13,14 @@
           <a class="nav-link" href="/register/">Register</a>
         </li>
         {% else %}
-        <li class="nav-item">
-          <a class="nav-link" href="/logout/">Logout</a>
-        </li>
+        {% if user.groups.all.0.name == 'RestaurantAdmins' %}
+            <li class="nav-item">
+              <a class="nav-link" href="/addTable/">Add Restaurant Table</a>
+            </li>
+        {% endif %}
+            <li class="nav-item">
+              <a class="nav-link" href="/logout/">Logout</a>
+            </li>
         {% endif %}
       </ul>
     </nav>

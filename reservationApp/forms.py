@@ -46,9 +46,9 @@ class ReservationForm(forms.Form):
 
     reservationTime = forms.DateTimeField(label='reservationTime', initial=datetime.now(), widget=forms.DateTimeInput(attrs={'type': 'datetime'}))
     reservationDateTimeExpiration = forms.DateTimeField(label='Date Time Reservation expiration', initial=datetime.now(), widget=forms.DateTimeInput(attrs={'type': 'datetime'}))
-    # maxNumberOfSeats = forms.IntegerField(widget=forms.NumberInput(attrs={'class' : 'form-control', 'type': 'hidden', 'value': '{{ data.maxNumberOfSeats }}'}))
+
 
 class RestaurantTableForm(forms.Form):
     maxNumberOfSeats = forms.IntegerField(label='Max Number Of Seats', max_value=100000, min_value=1, widget=forms.NumberInput(attrs={'class' : 'form-control', 'placeholder' : 'Enter Maximum Number Of Seats'}))
     tableNumber = forms.IntegerField(label='Table Number', max_value=100000, min_value=1, widget=forms.NumberInput(attrs={'class' : 'form-control', 'placeholder' : 'Enter Table Number'}))
-    restaurantId = forms.IntegerField(widget=forms.NumberInput(attrs={'class' : 'form-control', 'type': 'hidden', 'value': 1}))
+    # restaurantId = forms.IntegerField(widget=forms.NumberInput(attrs={'class' : 'form-control', 'type': 'hidden', 'value': 1}))

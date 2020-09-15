@@ -76,10 +76,8 @@ def home(request):
 class tableDetails(APIView):
     def get(self, request, id):
         if request.user.is_authenticated:
-            # restaurantTable = Table.objects.filter(pk=id)
             TableObj = Table.objects.get(pk=id)
             restaurantInfo = Restaurant.objects.get(pk=TableObj.restaurantId.pk)
-            # serializer = TableSerializer(restaurantTable, many=False)
             form = ReservationForm()
             return render(request, 'tableDetails.html', {'form': form, 'data': TableObj, 'restaurantData': restaurantInfo})
         else:
@@ -88,21 +86,19 @@ class tableDetails(APIView):
     def post(self, request, id):
         if request.user.is_authenticated:
             form = ReservationForm(request.POST)
-            print(form)
-            print(form.cleaned_data.get("reservationTime"))
+
             if form.is_valid():
-                if form.cleaned_data['numberOfSeats'] <= form.cleaned_data['maxNumberOfSeats']:
-                    # serializer = TableReservationSerializer(data=form.data)
+                TableObj = Table.objects.get(pk=id)
+                if form.cleaned_data['numberOfSeats'] <= TableObj.maxNumberOfSeats:
                     res = TableReservation.objects.create(userId=request.user,
-                                                    tableId=Table.objects.get(pk=id),
+                                                    tableId=TableObj,
                                                     NumberOfSeats=form.cleaned_data['numberOfSeats'],
                                                     reservationTime=form.cleaned_data['reservationTime'],
                                                     expiredReservationTime=form.cleaned_data['reservationDateTimeExpiration'])
                     res.save()
-                    print(request.user.id)
-                    # if serializer.is_valid():
-                    #     serializer.save()
                     messages.success(request, 'Reservation Completed')
+                else:
+                    messages.error(request, 'exceeded maximum number of seats')
             else:
                 messages.info(request, 'Invalid Input')
 
@@ -119,15 +115,10 @@ class tablesList(APIView):
             serializer = TableSerializer(restaurantTables, many=True)
             print(serializer.data)
             for dt in serializer.data:
-                print(dt['id'])
-                print(dt['restaurantId'])
-                print(dt['maxNumberOfSeats'])
-                print(dt['tableReservations'])
-                if(len(dt['tableReservations']) == 0):
+                if len(dt['tableReservations']) == 0:
                     data.append(dt)
 
             return render(request, 'restaurantTables.html', {'data': data, 'restaurantData': restaurantInfo })
-            # return Response(serializer.data)
 
     def post(self, request):
         pass
@@ -136,7 +127,8 @@ class addTable(APIView):
     def get(self, request):
         if request.user.is_authenticated and request.user.groups.filter(name = 'RestaurantAdmins').exists():
             form = RestaurantTableForm()
-            return render(request, 'addTable.html', {'form': form})
+            restaurantInfo = Restaurant.objects.all()
+            return render(request, 'addTable.html', {'form': form, 'restaurantInfo': restaurantInfo})
         else:
             return render(request, 'index.html')
 
