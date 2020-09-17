@@ -5,8 +5,7 @@ from django.contrib import auth, messages
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
-from django.utils.timezone import now
+from django.http import HttpResponseRedirect
 from django.views import View
 from .forms import LoginForm, RegisterForm, RestaurantTableForm, ReservationForm
 from rest_framework.views import APIView
@@ -14,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Table, TableReservation, Restaurant, Country
-from .serializers import TableSerializer, TableReservationSerializer, RestaurantSerializer
+from .serializers import TableSerializer, RestaurantSerializer
 from secrets import compare_digest
 
 

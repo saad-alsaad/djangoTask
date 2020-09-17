@@ -1,0 +1,12 @@
+Column,Value (1),Value (2),Value (3)
+id,1,2,3
+password,pbkdf2_sha256$180000$0Rcq2PEgUGir$yhh9lujXnVNZRUANivV6+SnPIezRPJZJauAZL8YqYuI=,pbkdf2_sha256$180000$u5y3roW8VRh6$utcXbKw+uGMsSd5ddaRh/6SI/71mJXsplO2IaCKaTxc=,pbkdf2_sha256$180000$917QHEglacH5$po3B2Pt6VlGHbAoLyTCARasZvP+1Gi07vFMqVtISf/0=
+last_login,2020-09-17 23:07:42.756809,,2020-09-17 23:12:21.711965
+is_superuser,true,false,false
+username,saad,user1,res1
+first_name,"",Ahmed,restaurant1
+last_name,"",Ali,admin
+email,saadalsaad00@gmail.com,"",""
+is_staff,true,false,false
+is_active,true,true,true
+date_joined,2020-09-17 23:07:34.150152,2020-09-17 23:09:52.000000,2020-09-17 23:10:21.000000

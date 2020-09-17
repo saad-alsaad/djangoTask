@@ -1,0 +1,4 @@
+Column,Value (1),Value (2),Value (3),Value (4),Value (5),Value (6),Value (7),Value (8),Value (9),Value (10)
+id,1,2,3,4,5,6,7,8,9,10
+app_label,admin,auth,auth,auth,contenttypes,sessions,reservationApp,reservationApp,reservationApp,reservationApp
+model,logentry,permission,group,user,contenttype,session,country,restaurant,table,tablereservation

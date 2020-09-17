@@ -1,0 +1,9 @@
+Column,Value (1),Value (2),Value (3),Value (4),Value (5)
+id,1,2,3,4,5
+action_time,2020-09-17 23:09:29.826531,2020-09-17 23:09:52.332009,2020-09-17 23:10:01.186410,2020-09-17 23:10:22.061755,2020-09-17 23:10:33.672457
+object_id,1,2,2,3,3
+object_repr,RestaurantAdmins,user1,user1,res1,res1
+action_flag,1,1,2,1,2
+change_message,"[{""added"": {}}]","[{""added"": {}}]","[{""changed"": {""fields"": [""First name"", ""Last name""]}}]","[{""added"": {}}]","[{""changed"": {""fields"": [""First name"", ""Last name"", ""Groups""]}}]"
+content_type_id,3,4,4,4,4
+user_id,1,1,1,1,1

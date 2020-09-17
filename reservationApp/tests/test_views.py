@@ -1,5 +1,6 @@
-from django.test import SimpleTestCase, Client, TestCase
-from django.urls import reverse, resolve
+from django.contrib.auth.models import User, Group
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from reservationApp.models import Restaurant, Country, Table
 
@@ -50,6 +51,22 @@ class TestViews(TestCase):
         self.assertRedirects(response, '/login/')
 
     def test_add_table_post_new_table(self):
+        group = Group.objects.create(name='RestaurantAdmins')
+
+        user = User.objects.create_user(username='test_user',
+                                password='123',
+                                email='test_user@gmail.com',
+                                first_name='test',
+                                last_name='user')
+
+        group.user_set.add(user)
+
+        response = self.client.post(self.login_url, {
+            'username': 'test_user',
+            'password': '123'})
+
+        self.assertEquals(response.status_code, 302)
+
         response = self.client.post(self.add_table_url, {
             'maxNumberOfSeats': 20,
             'tableNumber': 5,
@@ -57,10 +74,10 @@ class TestViews(TestCase):
         })
 
         self.assertEquals(response.status_code, 200)
-        # self.assertEquals(self.restaurant.tables.first().tableNumber, 5)
+        self.assertEquals(Table.objects.count(), 1)
 
     def test_add_table_post_no_data(self):
         response = self.client.post(self.add_table_url)
 
         self.assertEquals(response.status_code, 200)
-        # check no table has been added
+        self.assertEquals(Table.objects.count(), 0)
