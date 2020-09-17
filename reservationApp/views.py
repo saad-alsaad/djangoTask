@@ -1,25 +1,31 @@
+from datetime import datetime, date, timedelta
+from time import time
+
 from django.contrib import auth, messages
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils.timezone import now
+from django.views import View
 from .forms import LoginForm, RegisterForm, RestaurantTableForm, ReservationForm
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Table, TableReservation, Restaurant
+from .models import Table, TableReservation, Restaurant, Country
 from .serializers import TableSerializer, TableReservationSerializer, RestaurantSerializer
+from secrets import compare_digest
 
 
-def index(request):
-    return render(request, 'index.html')
+class UserLogin(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect('/home/')
+        form = LoginForm()
+        return render(request, 'login.html', {'form': form})
 
-def login(request):
-    if request.user.is_authenticated:
-        return HttpResponseRedirect('/home/')
-
-    elif request.method == 'POST':
+    def post(self, request):
         form = LoginForm(request.POST)
         if form.is_valid():
             user = auth.authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
@@ -29,22 +35,21 @@ def login(request):
             else:
                 messages.info(request, 'Wrong username or password')
                 return render(request, 'login.html', {'form': form})
-    else:
-        form = LoginForm()
+        else:
+            return render(request, 'login.html', {'form': form})
 
-    return render(request, 'login.html', {'form': form})
 
-def logoutUser(request):
-    logout(request)
-    return HttpResponseRedirect('/')
+class UserRegistration(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect('/home/')
+        form = RegisterForm()
+        return render(request, 'registration.html', {'form': form})
 
-def register(request):
-    if request.user.is_authenticated:
-        return HttpResponseRedirect('/home/')
-    elif request.method == 'POST':
+    def post(self, request):
         form = RegisterForm(request.POST)
         if form.is_valid():
-            if form.password == form.confirmPassword:
+            if compare_digest(form.password, form.confirmPassword):
                 if User.objects.filter(username=form.username).exists():
                     messages.info(request, 'username already exists')
                 elif User.objects.filter(username=form.username).exists():
@@ -60,41 +65,54 @@ def register(request):
                 messages.info(request, 'Password not matched')
 
             return HttpResponseRedirect('/home/')
-    else:
-        form = RegisterForm()
+        else:
+            messages.error(request, 'Invalid Input')
+            return render(request, 'registration.html', {'form': form})
 
-    return render(request, 'registration.html', {'form': form})
 
-def home(request):
-    if not request.user.is_authenticated:
-        return HttpResponseRedirect('/login/')
-    else:
-        restaurantInfo = Restaurant.objects.all()
-        serializer = RestaurantSerializer(restaurantInfo, many=True)
-        return render(request, 'home.html', {'data': serializer.data})
+class Home(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect('/login/')
+        else:
+            restaurant_info = Restaurant.objects.all()
+            serializer = RestaurantSerializer(restaurant_info, many=True)
+            for dt in serializer.data:
+                country = Country.objects.filter(pk=dt['countryId'])
+                print(dt['name'])
+                print(country[0].country_name)
+                dt['country_name'] = country[0].country_name
 
-class tableDetails(APIView):
+            return render(request, 'home.html', {'data': serializer.data})
+
+    def post(self):
+        pass
+
+
+class TableDetails(APIView):
     def get(self, request, id):
         if request.user.is_authenticated:
-            TableObj = Table.objects.get(pk=id)
-            restaurantInfo = Restaurant.objects.get(pk=TableObj.restaurantId.pk)
+            table_obj = Table.objects.get(pk=id)
+            restaurant_info = Restaurant.objects.get(pk=table_obj.restaurantId.pk)
             form = ReservationForm()
-            return render(request, 'tableDetails.html', {'form': form, 'data': TableObj, 'restaurantData': restaurantInfo})
+            return render(request, 'tableDetails.html',
+                          {'form': form, 'data': table_obj, 'restaurantData': restaurant_info})
         else:
             return HttpResponseRedirect('/login/')
 
     def post(self, request, id):
         if request.user.is_authenticated:
             form = ReservationForm(request.POST)
-
+            table_obj = Table.objects.get(pk=id)
+            restaurant_info = Restaurant.objects.get(pk=table_obj.restaurantId.pk)
             if form.is_valid():
-                TableObj = Table.objects.get(pk=id)
-                if form.cleaned_data['numberOfSeats'] <= TableObj.maxNumberOfSeats:
+                if form.cleaned_data['numberOfSeats'] <= table_obj.maxNumberOfSeats:
                     res = TableReservation.objects.create(userId=request.user,
-                                                    tableId=TableObj,
-                                                    NumberOfSeats=form.cleaned_data['numberOfSeats'],
-                                                    reservationTime=form.cleaned_data['reservationTime'],
-                                                    expiredReservationTime=form.cleaned_data['reservationDateTimeExpiration'])
+                                                          tableId=table_obj,
+                                                          NumberOfSeats=form.cleaned_data['numberOfSeats'],
+                                                          reservationTime=form.cleaned_data['reservationTime'],
+                                                          expiredReservationTime=form.cleaned_data[
+                                                              'reservationDateTimeExpiration'])
                     res.save()
                     messages.success(request, 'Reservation Completed')
                 else:
@@ -102,38 +120,43 @@ class tableDetails(APIView):
             else:
                 messages.info(request, 'Invalid Input')
 
-            return render(request, 'tableDetails.html', {'form': form})
+            return render(request, 'tableDetails.html', {'form': form, 'data': table_obj,
+                                                         'restaurantData': restaurant_info})
         else:
             return render(request, '/login/')
 
-class tablesList(APIView):
+
+class TablesList(APIView):
     def get(self, request, fid):
         data = []
         if request.user.is_authenticated:
-            restaurantTables = Table.objects.filter(restaurantId=fid)
-            restaurantInfo = Restaurant.objects.get(pk=fid)
-            serializer = TableSerializer(restaurantTables, many=True)
-            print(serializer.data)
+            restaurant_tables = Table.objects.filter(restaurantId=fid)
+            restaurant_info = Restaurant.objects.get(pk=fid)
+            serializer = TableSerializer(restaurant_tables, many=True)
             for dt in serializer.data:
-                if len(dt['tableReservations']) == 0:
+                reservations = TableReservation.objects.filter(tableId=dt['id'],
+                                                               expiredReservationTime__lt=datetime.now()).order_by(
+                                                                '-expiredReservationTime')
+                if reservations.count() == 0:
                     data.append(dt)
 
-            return render(request, 'restaurantTables.html', {'data': data, 'restaurantData': restaurantInfo })
+            return render(request, 'restaurantTables.html', {'data': data, 'restaurantData': restaurant_info})
 
     def post(self, request):
         pass
 
-class addTable(APIView):
+
+class AddTable(APIView):
     def get(self, request):
-        if request.user.is_authenticated and request.user.groups.filter(name = 'RestaurantAdmins').exists():
+        if request.user.is_authenticated and request.user.groups.filter(name='RestaurantAdmins').exists():
             form = RestaurantTableForm()
-            restaurantInfo = Restaurant.objects.all()
-            return render(request, 'addTable.html', {'form': form, 'restaurantInfo': restaurantInfo})
+            restaurant_info = Restaurant.objects.all()
+            return render(request, 'addTable.html', {'form': form, 'restaurantInfo': restaurant_info})
         else:
             return render(request, 'index.html')
 
     def post(self, request):
-        if request.user.is_authenticated and request.user.groups.filter(name = 'RestaurantAdmins').exists():
+        if request.user.is_authenticated and request.user.groups.filter(name='RestaurantAdmins').exists():
             form = RestaurantTableForm(request.POST)
             serializer = TableSerializer(data=form.data)
             if serializer.is_valid():
@@ -144,3 +167,12 @@ class addTable(APIView):
             return render(request, 'addTable.html', {'form': form})
         else:
             return render(request, 'index.html')
+
+
+def index(request):
+    return render(request, 'index.html')
+
+
+def logout_user(request):
+    logout(request)
+    return HttpResponseRedirect('/')

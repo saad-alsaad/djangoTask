@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django import forms
 
+
 class LoginForm(forms.Form):
     username = forms.CharField(label='username', max_length=255, widget=forms.TextInput(attrs={
         'class' : 'form-control', 'placeholder' : 'Enter Your Username'}
@@ -40,6 +41,7 @@ class RegisterForm(forms.Form):
         'class' : 'form-control', 'placeholder' : 'Password Confirmation'}
     ))
 
+
 class ReservationForm(forms.Form):
     numberOfSeats = forms.IntegerField(label='Max Number Of Seats', min_value=1, widget=forms.NumberInput(
         attrs={'class': 'form-control', 'placeholder': 'Enter Number Of Seats'}))
@@ -51,4 +53,3 @@ class ReservationForm(forms.Form):
 class RestaurantTableForm(forms.Form):
     maxNumberOfSeats = forms.IntegerField(label='Max Number Of Seats', max_value=100000, min_value=1, widget=forms.NumberInput(attrs={'class' : 'form-control', 'placeholder' : 'Enter Maximum Number Of Seats'}))
     tableNumber = forms.IntegerField(label='Table Number', max_value=100000, min_value=1, widget=forms.NumberInput(attrs={'class' : 'form-control', 'placeholder' : 'Enter Table Number'}))
-    # restaurantId = forms.IntegerField(widget=forms.NumberInput(attrs={'class' : 'form-control', 'type': 'hidden', 'value': 1}))
