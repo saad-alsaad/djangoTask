@@ -18,11 +18,13 @@ from secrets import compare_digest
 
 
 class UserLogin(View):
+    login_template = 'login.html'
+
     def get(self, request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/home/')
         form = LoginForm()
-        return render(request, 'login.html', {'form': form})
+        return render(request, self.login_template, {'form': form})
 
     def post(self, request):
         form = LoginForm(request.POST)
@@ -33,17 +35,19 @@ class UserLogin(View):
                 return HttpResponseRedirect('/home/')
             else:
                 messages.info(request, 'Wrong username or password')
-                return render(request, 'login.html', {'form': form})
+                return render(request, self.login_template, {'form': form})
         else:
-            return render(request, 'login.html', {'form': form})
+            return render(request, self.login_template, {'form': form})
 
 
 class UserRegistration(View):
+    registration_template = 'registration.html'
+
     def get(self, request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/home/')
         form = RegisterForm()
-        return render(request, 'registration.html', {'form': form})
+        return render(request, self.registration_template, {'form': form})
 
     def post(self, request):
         form = RegisterForm(request.POST)
@@ -66,35 +70,52 @@ class UserRegistration(View):
             return HttpResponseRedirect('/home/')
         else:
             messages.error(request, 'Invalid Input')
-            return render(request, 'registration.html', {'form': form})
+            return render(request, self.registration_template, {'form': form})
 
 
 class Home(View):
+    home_template = 'home.html'
+
     def get(self, request):
         if not request.user.is_authenticated:
             return HttpResponseRedirect('/login/')
         else:
-            restaurant_info = Restaurant.objects.all()
-            serializer = RestaurantSerializer(restaurant_info, many=True)
-            for dt in serializer.data:
-                country = Country.objects.filter(pk=dt['countryId'])
-                print(dt['name'])
-                print(country[0].country_name)
-                dt['country_name'] = country[0].country_name
+            data, selected_country = [], []
+            restaurant_info = None
+            countries = Country.objects.all()
+            country_id = request.GET.get('country_id')
 
-            return render(request, 'home.html', {'data': serializer.data})
+            if country_id is not None:
+                selected_country = countries.filter(pk=country_id)
+                if selected_country.count() > 0:
+                    restaurant_info = Restaurant.objects.filter(countryId_id=country_id)
+            else:
+                restaurant_info = Restaurant.objects.all()
+
+            if restaurant_info is not None:
+                serializer = RestaurantSerializer(restaurant_info, many=True)
+                for dt in serializer.data:
+                    country = countries.filter(pk=dt['countryId'])
+                    dt['country_name'] = country[0].country_name   # I see such information is not needed
+                data = serializer.data
+            else:
+                messages.error(request, 'Invalid Input')
+
+            return render(request, self.home_template, {'data': data, 'countries': countries, 'selected_country': selected_country})
 
     def post(self):
         pass
 
 
 class TableDetails(APIView):
+    table_details_template = 'tableDetails.html'
+
     def get(self, request, id):
         if request.user.is_authenticated:
             table_obj = Table.objects.get(pk=id)
             restaurant_info = Restaurant.objects.get(pk=table_obj.restaurantId.pk)
             form = ReservationForm()
-            return render(request, 'tableDetails.html',
+            return render(request, self.table_details_template,
                           {'form': form, 'data': table_obj, 'restaurantData': restaurant_info})
         else:
             return HttpResponseRedirect('/login/')
@@ -119,13 +140,15 @@ class TableDetails(APIView):
             else:
                 messages.info(request, 'Invalid Input')
 
-            return render(request, 'tableDetails.html', {'form': form, 'data': table_obj,
+            return render(request, self.table_details_template, {'form': form, 'data': table_obj,
                                                          'restaurantData': restaurant_info})
         else:
             return render(request, '/login/')
 
 
 class TablesList(APIView):
+    restaurant_table_template = 'restaurantTables.html'
+
     def get(self, request, fid):
         data = []
         if request.user.is_authenticated:
@@ -139,7 +162,7 @@ class TablesList(APIView):
                 if reservations.count() == 0:
                     data.append(dt)
 
-            return render(request, 'restaurantTables.html', {'data': data, 'restaurantData': restaurant_info})
+            return render(request, self.restaurant_table_template, {'data': data, 'restaurantData': restaurant_info})
 
     def post(self, request):
         pass

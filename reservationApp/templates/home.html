@@ -10,10 +10,36 @@
     {% include "header.html" %}
 {#    {{ data }}#}
     <div class="container">
-        <div class="form-group text-center">
+
+        <div class="form-group text-center h-25">
             <h4> Restaurants </h4>
         </div>
-        <div class="list-group">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <form action="/home/" method="get" class="shadow-sm p-4 mb-4 bg-white">
+            <div class="form-group">
+                <select class="browser-default custom-select" name="country_id">
+                    <option value="">Select Country</option>
+                {% for country in countries %}
+                    {% if selected_country.0.pk == country.pk %}
+                        <option value="{{ country.pk }}" selected>{{ country.country_name }}</option>
+                    {% else %}
+                        <option value="{{ country.pk }}">{{ country.country_name }}</option>
+                    {% endif %}
+                {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+
+        <div class="list-group shadow-sm p-4 mb-4 bg-white">
           {% for dt in data %}
               <a href="/restaurantTables/{{ dt.id }}/" class="list-group-item list-group-item-action flex-column align-items-start">
                 <div class="d-flex w-100 justify-content-between">
